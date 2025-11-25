@@ -34,9 +34,8 @@
             color: var(--text-main);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height: 100vh; 
-            height: 100vh; /* FIX: Added explicit height */
             padding: 10px 0; 
-            overflow: hidden; /* FIX: Changed to hidden to ensure no scrolling */
+            overflow-y: auto; /* Reverted to auto, but smaller canvas should prevent scroll */
         }
         h1{
             font-size: 24px;
@@ -58,7 +57,7 @@
         }
         
         #canvas-container {
-            /* Standard screen size, reduced to 85vmin */
+            /* Standard screen size: 85vmin */
             width: 85vmin;
             height: 85vmin; 
             max-width: 720px; 
@@ -200,9 +199,10 @@
                 align-items: center; 
             }
             #canvas-container {
-                /* FIX: Reduced from 85vw to 65vw to make vertical space for the buttons */
-                width: 65vw; 
-                height: 65vw;
+                /* FIX: Reduced canvas height significantly (40% of viewport height) 
+                   to guarantee space for the large control panel and buttons below it. */
+                width: 90vw; /* Use most of the width */
+                height: 40vh; /* Use only 40% of the height */
                 max-height: unset; 
                 max-width: unset;
             }
