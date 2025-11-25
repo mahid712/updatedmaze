@@ -34,8 +34,9 @@
             color: var(--text-main);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height: 100vh; 
+            height: 100vh; /* FIX: Added explicit height */
             padding: 10px 0; 
-            overflow-y: auto; 
+            overflow: hidden; /* FIX: Changed to hidden to ensure no scrolling */
         }
         h1{
             font-size: 24px;
@@ -50,14 +51,14 @@
             align-items: center; 
             max-width: 1200px;
             width: 95%; 
-            flex-grow: 1; /* Key change: Fills remaining vertical space */
+            flex-grow: 1; 
             padding: 0;
             flex-wrap: wrap; 
             justify-content: center;
         }
         
         #canvas-container {
-            /* Adjusted from 90vmin to 85vmin to prevent overflow caused by other elements */
+            /* Standard screen size, reduced to 85vmin */
             width: 85vmin;
             height: 85vmin; 
             max-width: 720px; 
@@ -199,9 +200,9 @@
                 align-items: center; 
             }
             #canvas-container {
-                /* Adjusted from 90vw to 85vw for mobile to prevent overflow */
-                width: 85vw; 
-                height: 85vw;
+                /* FIX: Reduced from 85vw to 65vw to make vertical space for the buttons */
+                width: 65vw; 
+                height: 65vw;
                 max-height: unset; 
                 max-width: unset;
             }
