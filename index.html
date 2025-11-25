@@ -166,23 +166,27 @@
         /* --- MOBILE CONTROLS STYLES --- */
         #mobile-controls {
             display: none; /* Hide by default */
-            width: 200px;
-            height: 200px;
+            /* FIX: Reduced size from 200px to 180px for better fit */
+            width: 180px;
+            height: 180px;
             position: relative;
-            margin-top: 20px;
+            /* FIX: Reduced margin from 20px to 10px */
+            margin-top: 10px;
             /* Add flex-shrink to prevent compression on small screens */
             flex-shrink: 0; 
         }
 
         #mobile-controls button {
             position: absolute;
-            width: 60px;
-            height: 60px;
+            /* FIX: Reduced button size from 60px to 50px */
+            width: 50px;
+            height: 50px;
             background: var(--button-bg);
             color: var(--text-main);
             border: none;
             border-radius: 50%;
-            font-size: 24px;
+            /* FIX: Reduced font size from 24px to 20px */
+            font-size: 20px;
             font-weight: bold;
             transition: background 0.2s, transform 0.1s;
             box-shadow: 0 2px 4px rgba(0,0,0,0.5);
@@ -191,11 +195,12 @@
             background: var(--button-hover);
             transform: scale(0.95);
         }
-
-        #up-btn { top: 0; left: 70px; }
-        #down-btn { bottom: 0; left: 70px; }
-        #left-btn { top: 70px; left: 0; }
-        #right-btn { top: 70px; right: 0; }
+        
+        /* FIX: Adjusted positions for 180px container and 50px buttons (Center position: (180-50)/2 = 65px) */
+        #up-btn { top: 0; left: 65px; } 
+        #down-btn { bottom: 0; left: 65px; } 
+        #left-btn { top: 65px; left: 0; }
+        #right-btn { top: 65px; right: 0; }
 
         @media (max-width: 1050px) {
             #game-wrap {
@@ -203,12 +208,14 @@
                 align-items: center; 
             }
             #canvas-container {
-                /* **FIX:** Further reduced canvas height to ensure all controls and the maze fit 
-                   on a single mobile screen without scrolling. (Reduced from 40vh to 30vh) */
-                width: 90vw; /* Use most of the width */
-                height: 30vh; /* Use only 30% of the height */
-                max-height: unset; 
-                max-width: unset;
+                /* FIX: The previous 'height: 30vh' was too small and non-square,
+                   which did not save enough vertical space and distorted the maze.
+                   Now setting a smaller, square size based on width and capping max height
+                   to ensure it doesn't take up too much vertical space, allowing the controls to fit. */
+                width: 80vw; /* Use 80% of the width */
+                height: 80vw; /* Keep it square by matching height to width */
+                max-height: 400px; /* Cap max height to ensure space for other elements */
+                max-width: 400px;
             }
             .panel {
                 max-width: 90vw;
