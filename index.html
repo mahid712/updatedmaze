@@ -29,18 +29,21 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px; 
+            /* FIX: Reduced gap from 10px to 5px for mobile space saving */
+            gap: 5px; 
             background: var(--bg);
             color: var(--text-main);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height: 100vh; 
-            padding: 10px 0; 
+            /* FIX: Reduced padding from 10px to 5px for mobile space saving */
+            padding: 5px 0; 
             overflow-y: auto; 
         }
         h1{
             font-size: 24px;
             margin: 0; 
-            padding-top: 10px;
+            /* FIX: Removed padding-top for mobile space saving */
+            padding-top: 0; 
             color: var(--path);
             text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
@@ -166,27 +169,27 @@
         /* --- MOBILE CONTROLS STYLES --- */
         #mobile-controls {
             display: none; /* Hide by default */
-            /* FIX: Reduced size from 200px to 180px for better fit */
-            width: 180px;
-            height: 180px;
+            /* FIX: Increased size from 180px to 200px for larger buttons */
+            width: 200px;
+            height: 200px;
             position: relative;
-            /* FIX: Reduced margin from 20px to 10px */
-            margin-top: 10px;
+            /* FIX: Reduced margin from 20px/10px to 10px */
+            margin-top: 10px; 
             /* Add flex-shrink to prevent compression on small screens */
             flex-shrink: 0; 
         }
 
         #mobile-controls button {
             position: absolute;
-            /* FIX: Reduced button size from 60px to 50px */
-            width: 50px;
-            height: 50px;
+            /* FIX: Increased button size from 50px to 60px */
+            width: 60px;
+            height: 60px;
             background: var(--button-bg);
             color: var(--text-main);
             border: none;
             border-radius: 50%;
-            /* FIX: Reduced font size from 24px to 20px */
-            font-size: 20px;
+            /* FIX: Increased font size from 20px to 24px */
+            font-size: 24px; 
             font-weight: bold;
             transition: background 0.2s, transform 0.1s;
             box-shadow: 0 2px 4px rgba(0,0,0,0.5);
@@ -196,11 +199,11 @@
             transform: scale(0.95);
         }
         
-        /* FIX: Adjusted positions for 180px container and 50px buttons (Center position: (180-50)/2 = 65px) */
-        #up-btn { top: 0; left: 65px; } 
-        #down-btn { bottom: 0; left: 65px; } 
-        #left-btn { top: 65px; left: 0; }
-        #right-btn { top: 65px; right: 0; }
+        /* FIX: Adjusted positions for 200px container and 60px buttons (Center position: (200-60)/2 = 70px) */
+        #up-btn { top: 0; left: 70px; } 
+        #down-btn { bottom: 0; left: 70px; } 
+        #left-btn { top: 70px; left: 0; }
+        #right-btn { top: 70px; right: 0; }
 
         @media (max-width: 1050px) {
             #game-wrap {
@@ -208,14 +211,11 @@
                 align-items: center; 
             }
             #canvas-container {
-                /* FIX: The previous 'height: 30vh' was too small and non-square,
-                   which did not save enough vertical space and distorted the maze.
-                   Now setting a smaller, square size based on width and capping max height
-                   to ensure it doesn't take up too much vertical space, allowing the controls to fit. */
-                width: 80vw; /* Use 80% of the width */
-                height: 80vw; /* Keep it square by matching height to width */
-                max-height: 400px; /* Cap max height to ensure space for other elements */
-                max-width: 400px;
+                /* FIX: Reduced size from 80vw/400px to 75vw/350px for better vertical fit */
+                width: 75vw; 
+                height: 75vw; 
+                max-height: 350px; 
+                max-width: 350px;
             }
             .panel {
                 max-width: 90vw;
