@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Maze Race — You vs AI (Improved UI + Pac-Man Design)</title>
+    <style>
+        /* New Color Palette and improved UI styles */
+        :root{
+            --bg: #1c1c3a; /* Dark background */
+            --wall: #4f5d75; /* Slate/Blue for walls */
+            --path: #f0f0f0; /* Light path/canvas background (Pac-Man arena color) */
+            --player: #ffd166; /* Pac-Man Yellow */
+            --ai: #ff6b6b; /* Ghost Coral Red */
+            --goal: #60d394; /* Mint Green for goal */
+            --coin: #f705ff; /* Coin/Pellet Yellow */
+            --text-main: #e0e0e0;
+            --panel-bg: #2e3549; /* Darker panel background */
+            --button-bg: #4a5568;
+            --button-hover: #5c6b86;
+        }
+
+        * {
+            user-select: none;
+            box-sizing: border-box; 
+        }
+        body{
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px; 
+            background: var(--bg);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh; 
+            padding: 10px 0; 
+            overflow-y: auto; 
+        }
+        h1{
+            font-size: 24px;
+            margin: 0; 
+            padding-top: 10px;
+            color: var(--path);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        #game-wrap{
+            display: flex;
+            gap: 20px; 
+            align-items: center; 
+            max-width: 1200px;
+            width: 95%; 
+            flex-grow: 1; /* Key change: Fills remaining vertical space */
+            padding: 0;
+            flex-wrap: wrap; 
+            justify-content: center;
+        }
+        
+        #canvas-container {
+            /* Adjusted from 90vmin to 85vmin to prevent overflow caused by other elements */
+            width: 85vmin;
+            height: 85vmin; 
+            max-width: 720px; 
+            max-height: 720px;
+            position: relative; 
+            flex-shrink: 0; 
+        }
+        canvas{
+            width: 100%;
+            height: 100%; 
+            display: block;
+            background: var(--path);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.8), 0 0 0 4px var(--wall);
+            transition: box-shadow 0.3s;
+        }
+
+        .panel{
+            max-width: 320px;
+            width: 100%;
+            padding: 20px;
+            background: var(--panel-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        .panel-group{
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .panel button, .panel .btn{
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: none;
+            background: var(--button-bg);
+            color: var(--text-main);
+            cursor: pointer;
+            font-weight: bold;
+            flex-grow: 1;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .panel button:hover{
+            background: var(--button-hover);
+        }
+        .panel button:active{
+            transform: scale(0.98);
+        }
+        .status{
+            margin-top: 15px;
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.8;
+            border: 1px solid #3d4763;
+        }
+        .status div{
+            display: flex;
+            justify-content: space-between;
+        }
+        .status span{
+            font-weight: bold;
+            color: var(--player);
+        }
+        #aiState{
+            color: var(--ai);
+        }
+        .controls{
+            margin-top: 15px;
+            font-size: 14px;
+            padding: 8px 0;
+            color: #b0b0b0;
+            text-align: center;
+            border-top: 1px solid #3d4763;
+        }
+        .legend{
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #3d4763;
+            flex-wrap: wrap;
+        }
+        .legend span{
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        /* We keep the swatch as a circle for simplicity in the legend */
+        .swatch{ 
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        footer{
+            font-size: 12px;
+            opacity: .7;
+            margin-top: 10px; 
+            text-align: center;
+        }
+
+        /* --- MOBILE CONTROLS STYLES --- */
+        #mobile-controls {
+            display: none; /* Hide by default */
+            width: 200px;
+            height: 200px;
+            position: relative;
+            margin-top: 20px;
+        }
+
+        #mobile-controls button {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: var(--button-bg);
+            color: var(--text-main);
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            font-weight: bold;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        #mobile-controls button:active {
+            background: var(--button-hover);
+            transform: scale(0.95);
+        }
+
+        #up-btn { top: 0; left: 70px; }
+        #down-btn { bottom: 0; left: 70px; }
+        #left-btn { top: 70px; left: 0; }
+        #right-btn { top: 70px; right: 0; }
+
+        @media (max-width: 1050px) {
+            #game-wrap {
+                flex-direction: column; 
+                align-items: center; 
+            }
+            #canvas-container {
+                /* Adjusted from 90vw to 85vw for mobile to prevent overflow */
+                width: 85vw; 
+                height: 85vw;
+                max-height: unset; 
+                max-width: unset;
+            }
+            .panel {
+                max-width: 90vw;
+            }
+            /* Show mobile controls on small screens */
+            #mobile-controls {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>✨ Maze Race — You vs AI </h1>
+
+    <div id="game-wrap">
+        <div id="canvas-container">
+            <canvas id="maze" width="720" height="720"></canvas>
+        </div>
+
+        <div class="panel">
+            <div class="panel-group">
+                <button id="regen">🔄 New Maze</button>
+                <button id="reset">▶️ Reset Positions</button>
+            </div>
+
+            <div class="status" id="status">
+                <div>AI delay: <span id="aiDelay"></span>s</div>
+                <div>Your moves: <span id="userMoves">0</span></div>
+                <div>Coins Collected: <span id="coinsCollected">0</span></div>
+                <div>AI state: <span id="aiState">waiting</span></div>
+            </div>
+
+            <div class="controls">Controls: **Arrow keys / WASD**</div>
+
+            <div class="legend">
+                <span><div class="swatch" style="background:var(--player)"></div>Player (Pac-Man)</span>
+                <span><div class="swatch" style="background:var(--ai)"></div>AI (Ghost)</span>
+                <span><div class="swatch" style="background:var(--goal); border-radius:4px;"></div>Goal</span>
+                <span><div class="swatch" style="background:var(--coin)"></div>Coin</span>
+            </div>
+
+            <footer>
+                Goal: reach the green cell before the AI.<br>Collecting a coin decreases the AI's delay!
+            </footer>
+        </div>
+    </div>
+    <div id="mobile-controls">
+        <button id="up-btn" aria-label="Move Up">▲</button>
+        <button id="down-btn" aria-label="Move Down">▼</button>
+        <button id="left-btn" aria-label="Move Left">◀</button>
+        <button id="right-btn" aria-label="Move Right">▶</button>
+    </div>
+
+<script>
+(() => {
+    'use strict'; 
+
+    // ===== Config =====
+    const cols = 24;
+    const rows = 24;
+    const canvas = document.getElementById('maze');
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    const cellW = w / cols, cellH = h / rows;
+
+    // === UI elements ===
+    const aiDelayEl = document.getElementById('aiDelay');
+    const userMovesEl = document.getElementById('userMoves');
+    const coinsCollectedEl = document.getElementById('coinsCollected');
+    const aiStateEl = document.getElementById('aiState');
+    const regenBtn = document.getElementById('regen');
+    const resetBtn = document.getElementById('reset');
+
+    // === Maze data ===
+    let grid = [];
+    let verticalWalls = [];
+    let horizontalWalls = [];
+
+    // === Players ===
+    // player.dir stores the angle in radians: 0=Right, PI/2=Down, PI=Left, 3PI/2=Up
+    let player = {x:0,y:0, dir: 0}; 
+    let ai = {x:0,y:1};
+    const goal = {x:cols-1,y:rows-1};
+
+    // === Coins ===
+    let coins = [];
+    const coinCount = 12;
+    let collectedCoins = 0;
+
+    // === AI timing ===
+    let initialAIDelaySec = 75;
+    let aiDelaySec = initialAIDelaySec;
+    const minAIDelaySec = 0.16;
+    const movePenaltySec = 1.0;
+    const coinBonusSec = 0.2;
+    let userMoves = 0;
+
+    let aiTimer = null;
+    let aiPath = [];
+
+    function idx(x,y){return y*cols + x;} 
+
+    // ===== Maze generator (unchanged) =====
+    function generateMaze(){
+        grid = new Array(cols*rows).fill(0);
+        verticalWalls = new Array(rows*(cols-1)).fill(true);
+        horizontalWalls = new Array(cols*(rows-1)).fill(true);
+
+        const stack = [];
+        const startX = 0, startY = 0;
+        grid[idx(startX,startY)] = 1;
+        stack.push({x:startX,y:startY});
+
+        while(stack.length){
+            const cur = stack[stack.length-1];
+            const {x,y} = cur;
+            const neighbors = [];
+            const dirs = [ [1,0],[-1,0],[0,1],[0,-1] ];
+            for(const [dx,dy] of dirs){
+                const nx = x+dx, ny = y+dy;
+                if(nx>=0 && nx<cols && ny>=0 && ny<rows && grid[idx(nx,ny)]===0){
+                    neighbors.push({x:nx,y:ny,dx,dy});
+                }
+            }
+            if(neighbors.length){
+                const n = neighbors[Math.floor(Math.random()*neighbors.length)];
+                if(n.dx===1){ verticalWalls[y*(cols-1) + x] = false; }
+                else if(n.dx===-1){ verticalWalls[y*(cols-1) + n.x] = false; }
+                else if(n.dy===1){ horizontalWalls[x*(rows-1) + y] = false; }
+                else if(n.dy===-1){ horizontalWalls[x*(rows-1) + n.y] = false; }
+
+                grid[idx(n.x,n.y)] = 1;
+                stack.push({x:n.x,y:n.y});
+            } else {
+                stack.pop();
+            }
+        }
+
+        coins = [];
+        for (let i = 0; i < coinCount; i++) {
+            while (true) {
+                const cx = Math.floor(Math.random()*cols);
+                const cy = Math.floor(Math.random()*rows);
+
+                if ((cx !== 0 || cy !== 0) &&
+                    (cx !== ai.x || cy !== ai.y) &&
+                    (cx !== goal.x || cy !== goal.y)) {
+                    coins.push({x:cx, y:cy});
+                    break;
+                }
+            }
+        }
+    }
+
+    // ==== Walls (unchanged) ====
+    function hasWallBetween(x1,y1,x2,y2){
+        if(x1===x2){
+            const minY = Math.min(y1,y2);
+            return horizontalWalls[x1*(rows-1)+minY];
+        }
+        if(y1===y2){
+            const minX = Math.min(x1,x2);
+            return verticalWalls[y1*(cols-1)+minX];
+        }
+        return true;
+    }
+
+    // ===== Draw (unchanged) =====
+    function draw(){
+        ctx.clearRect(0,0,w,h);
+
+        // background (path)
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--path');
+        ctx.fillRect(0,0,w,h);
+
+        // walls (unchanged)
+        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--wall');
+        ctx.lineWidth = 4; 
+        for(let y=0;y<rows;y++){
+            for(let x=0;x<cols-1;x++){
+                if(verticalWalls[y*(cols-1)+x]){
+                    const sx = (x+1)*cellW;
+                    ctx.beginPath();
+                    ctx.moveTo(sx,y*cellH);
+                    ctx.lineTo(sx,(y+1)*cellH);
+                    ctx.stroke();
+                }
+            }
+        }
+        for(let x=0;x<cols;x++){
+            for(let y=0;y<rows-1;y++){
+                if(horizontalWalls[x*(rows-1)+y]){
+                    const sy = (y+1)*cellH;
+                    ctx.beginPath();
+                    ctx.moveTo(x*cellW,sy);
+                    ctx.lineTo((x+1)*cellW,sy);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // goal (square)
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--goal');
+        ctx.fillRect(goal.x*cellW+4, goal.y*cellH+4, cellW-8, cellH-8);
+
+        // ===== coins (draw before players) =====
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--coin');
+        coins.forEach(c => {
+            ctx.beginPath();
+            // Draw a small circle (pellet)
+            ctx.arc(
+                c.x*cellW + cellW/2,
+                c.y*cellH + cellH/2,
+                Math.min(cellW,cellH)*0.22, 
+                0, Math.PI*2
+            );
+            ctx.fill();
+        });
+
+        // -----------------------------------------------------------------
+        // Player (Pac-Man) Drawing Logic
+        // -----------------------------------------------------------------
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--player');
+        const radius = Math.min(cellW,cellH)*0.35;
+        const centerX = player.x*cellW + cellW/2;
+        const centerY = player.y*cellH + cellH/2;
+        
+        // Use the stored direction angle directly
+        const angle = player.dir; 
+        
+        // Pac-Man mouth angle: 30 degrees open (PI/6 radians)
+        const mouthAngle = Math.PI / 6; 
+        
+        // Arc starts at the top edge of the mouth
+        let startAngle = angle + mouthAngle; 
+        // Arc ends at the bottom edge of the mouth
+        let endAngle = angle - mouthAngle;
+
+        ctx.beginPath();
+        // Move to center to create the mouth point
+        ctx.moveTo(centerX, centerY); 
+        // Draw the Pac-Man body Clockwise (false) to leave the mouth gap facing 'angle'
+        ctx.arc(
+            centerX, 
+            centerY, 
+            radius, 
+            startAngle, 
+            endAngle, 
+            false 
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        // -----------------------------------------------------------------
+        // AI (Ghost) Drawing Logic (unchanged)
+        // -----------------------------------------------------------------
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--ai');
+        const ghostRadius = Math.min(cellW,cellH)*0.35;
+        const ghostX = ai.x*cellW + cellW/2;
+        const ghostY = ai.y*cellH + cellH/2;
+        
+        const baseCenterY = ghostY - ghostRadius * 0.1;
+        
+        ctx.beginPath();
+        
+        // 1. Draw the rounded top (semicircle)
+        ctx.arc(
+            ghostX, 
+            baseCenterY, 
+            ghostRadius, 
+            Math.PI, 
+            0, 
+            false
+        );
+        
+        // 2. Draw the scalloped bottom
+        const baseW = ghostRadius * 2;
+        const numScallops = 4;
+        
+        for (let i = 0; i <= numScallops; i++) {
+            const xPos = ghostX - ghostRadius + (baseW / numScallops) * i;
+            if (i % 2 === 0) {
+                // Down point
+                ctx.lineTo(xPos, baseCenterY + ghostRadius * 0.6); 
+            } else {
+                // Up point
+                ctx.lineTo(xPos, baseCenterY); // Line back up to the base line
+            }
+        }
+        
+        ctx.closePath();
+        ctx.fill();
+        
+        // Ghost Eyes
+        const eyeRadius = ghostRadius * 0.2;
+        const pupilRadius = ghostRadius * 0.1;
+        const eyeY = baseCenterY - ghostRadius * 0.4;
+        
+        // Eye 1 (White)
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(ghostX - ghostRadius * 0.35, eyeY, eyeRadius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Eye 2 (White)
+        ctx.beginPath();
+        ctx.arc(ghostX + ghostRadius * 0.35, eyeY, eyeRadius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Pupils (Black) - Simple fixed direction for now
+        ctx.fillStyle = '#000';
+        // Pupil 1
+        ctx.beginPath();
+        ctx.arc(ghostX - ghostRadius * 0.35, eyeY, pupilRadius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Pupil 2
+        ctx.beginPath();
+        ctx.arc(ghostX + ghostRadius * 0.35, eyeY, pupilRadius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // ===== A* and MinHeap (unchanged) =====
+    function neighbors(x,y){
+        const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+        const out = [];
+        for(const [dx,dy] of dirs){
+            const nx=x+dx, ny=y+dy;
+            if(nx>=0 && nx<cols && ny>=0 && ny<rows && !hasWallBetween(x,y,nx,ny)){
+                out.push({x:nx,y:ny});
+            }
+        }
+        return out;
+    }
+
+    function heuristic(a,b){return Math.abs(a.x-b.x)+Math.abs(a.y-b.y);} 
+
+    function findPath(start,goalPos){
+        const open = new MinHeap((a,b)=>a.f-b.f);
+        const startNode = {x:start.x,y:start.y,g:0,f:heuristic(start,goalPos),came:null,key:start.x+","+start.y};
+        const map = new Map();
+        map.set(startNode.key,startNode);
+        open.push(startNode);
+        const closed = new Set();
+
+        while(!open.empty()){
+            const cur = open.pop();
+            if(cur.x===goalPos.x && cur.y===goalPos.y){
+                const p=[]; let n=cur;
+                while(n){p.unshift({x:n.x,y:n.y});n=n.came;}
+                return p;
+            }
+            closed.add(cur.key);
+            for(const nb of neighbors(cur.x,cur.y)){
+                const key = nb.x+","+nb.y;
+                if(closed.has(key)) continue;
+                const g = cur.g+1;
+                let node = map.get(key);
+                if(!node || g < node.g){
+                    const newN = {x:nb.x,y:nb.y,g,f:g+heuristic(nb,goalPos),came:cur,key};
+                    map.set(key,newN);
+                    open.push(newN);
+                }
+            }
+        }
+        return [];
+    }
+
+    class MinHeap{
+        constructor(cmp){this.data=[];this.cmp=cmp;} 
+        empty(){return this.data.length===0;} 
+        push(v){this.data.push(v);this._up(this.data.length-1);} 
+        pop(){
+            if(this.data.length===0) return null;
+            const ret = this.data[0];
+            const last = this.data.pop();
+            if(this.data.length){this.data[0] = last; this._down(0);}
+            return ret;
+        }
+        _up(i){ 
+            while(i>0){
+                const p=(i-1)>>1;
+                if(this.cmp(this.data[i],this.data[p])<0){
+                    [this.data[i],this.data[p]]=[this.data[p],this.data[i]];
+                    i=p;
+                } else break;
+            }
+        }
+        _down(i){ 
+            const n=this.data.length;
+            while(true){
+                let l=i*2+1;
+                if(l>=n) break;
+                let r=l+1;
+                let s=l;
+                if(r<n && this.cmp(this.data[r],this.data[l])<0) s=r;
+                if(this.cmp(this.data[s],this.data[i])<0){
+                    [this.data[s],this.data[i]]=[this.data[i],this.data[s]];
+                    i=s;
+                } else break;
+            }
+        }
+    }; 
+
+    // ==== AI movement (unchanged) ====
+    function scheduleAIMove(){
+        if(aiTimer){clearTimeout(aiTimer); aiTimer=null;}
+
+        if(ai.x===goal.x && ai.y===goal.y){
+            aiStateEl.textContent = "AI reached goal — AI wins! 🤖";
+            return;
+        }
+        if(player.x===goal.x && player.y===goal.y){
+            aiStateEl.textContent = "Player reached goal — You win! 🎉";
+            return;
+        }
+
+        const delayMs = Math.max(minAIDelaySec*1000, aiDelaySec*1000);
+        aiDelayEl.textContent = (delayMs/1000).toFixed(2);
+        aiStateEl.textContent = `next move in ${ (delayMs/1000).toFixed(2) }s`;
+
+        aiTimer = setTimeout(()=>{
+            aiStateEl.textContent = "thinking";
+
+            // AI calculates the path
+            aiPath = findPath({x:ai.x,y:ai.y},goal);
+            if(!aiPath || aiPath.length===0){
+                aiStateEl.textContent = "stuck";
+                // If stuck, try again after a small delay
+                aiTimer = setTimeout(scheduleAIMove, minAIDelaySec*1000);
+                return;
+            }
+
+            if(aiPath.length>1){
+                const next = aiPath[1];
+                ai.x = next.x; ai.y = next.y;
+                draw();
+
+                if(ai.x===goal.x && ai.y===goal.y){
+                    aiStateEl.textContent="AI reached goal — AI wins! 🤖";
+                    return;
+                }
+
+                scheduleAIMove();
+            }
+        }, delayMs);
+    }
+
+    // ===== Player move (unchanged) =====
+    function tryMovePlayer(dx,dy){
+        const nx = player.x+dx, ny = player.y+dy;
+        if(nx<0 || nx>=cols || ny<0 || ny>=rows) return;
+        if(hasWallBetween(player.x,player.y,nx,ny)) return;
+
+        player.x=nx; player.y=ny;
+        userMoves++;
+        userMovesEl.textContent = userMoves;
+        
+        // Set player direction (in radians) for drawing the Pac-Man mouth
+        if (dx === 1) player.dir = 0; // Right (0 radians)
+        else if (dx === -1) player.dir = Math.PI; // Left (PI radians)
+        else if (dy === -1) player.dir = 3 * Math.PI / 2; // Up (270 degrees)
+        else if (dy === 1) player.dir = Math.PI / 2; // Down (90 degrees)
+
+        // Standard player move penalty (slows AI)
+        aiDelaySec = Math.max(minAIDelaySec, aiDelaySec - movePenaltySec);
+
+        // ===== coin collection (unchanged) =====
+        for(let i=coins.length-1;i>=0;i--){
+            if(coins[i].x===player.x && coins[i].y===player.y){
+                coins.splice(i,1);
+                collectedCoins++;
+                aiDelaySec = Math.max(minAIDelaySec, aiDelaySec + coinBonusSec);
+                coinsCollectedEl.textContent = collectedCoins;
+                break; 
+            }
+        }
+
+        aiDelayEl.textContent = aiDelaySec.toFixed(2);
+
+        draw();
+
+        if(player.x===goal.x && player.y===goal.y){
+            aiStateEl.textContent="Player reached goal — You win! 🎉";
+            if(aiTimer) clearTimeout(aiTimer);
+            return;
+        }
+
+        if(aiTimer) clearTimeout(aiTimer);
+        scheduleAIMove();
+    }
+
+    // === Keyboard (unchanged) ===
+    window.addEventListener('keydown', (e)=>{
+        const k=e.key;
+        if(["ArrowUp","w","W"].includes(k)) tryMovePlayer(0,-1);
+        else if(["ArrowDown","s","S"].includes(k)) tryMovePlayer(0,1);
+        else if(["ArrowLeft","a","A"].includes(k)) tryMovePlayer(-1,0);
+        else if(["ArrowRight","d","D"].includes(k)) tryMovePlayer(1,0);
+    });
+    
+    // === Mobile Controls Setup (unchanged) ===
+    document.getElementById('up-btn').addEventListener('click', () => tryMovePlayer(0, -1));
+    document.getElementById('down-btn').addEventListener('click', () => tryMovePlayer(0, 1));
+    document.getElementById('left-btn').addEventListener('click', () => tryMovePlayer(-1, 0));
+    document.getElementById('right-btn').addEventListener('click', () => tryMovePlayer(1, 0));
+
+
+    // ==== Reset (unchanged) ====
+    function resetPositions(){
+        player={x:0,y:0, dir: 0}; 
+        ai={x:0,y:1};
+        userMoves=0;
+        collectedCoins=0; 
+        aiDelaySec=initialAIDelaySec;
+        
+        aiDelayEl.textContent=aiDelaySec.toFixed(2);
+        userMovesEl.textContent=userMoves;
+        coinsCollectedEl.textContent=collectedCoins;
+        aiStateEl.textContent="waiting";
+        
+        if(aiTimer) clearTimeout(aiTimer);
+
+        scheduleAIMove();
+        draw();
+    }
+
+    regenBtn.addEventListener('click',()=>{
+        if(aiTimer) clearTimeout(aiTimer);
+        generateMaze();
+        resetPositions();
+    });
+    resetBtn.addEventListener('click',resetPositions);
+
+    generateMaze();
+    resetPositions();
+    draw();
+
+})();
+</script>
+</body>
+</html>
